@@ -32,11 +32,11 @@ function getIpAdress(addressInfo as addrInfo ptr) as string
 	dim IP as string 
 	if ( addressInfo->ai_family = AF_INET6 ) then
 		IP = space(46)
+		inet_ntop( addressInfo->ai_family, @(cast(sockaddr_in6 ptr,addressInfo->ai_addr)->sin6_addr), strptr(IP), len(IP) )
 	else
 		IP = space(16)
+		inet_ntop( addressInfo->ai_family, @(cast(sockaddr_in ptr,addressInfo->ai_addr)->sin_addr), strptr(IP), len(IP) )
 	end if
 	
-	' Converts IP integer to string:
-	inet_ntop( addressInfo->ai_family, addressInfo->ai_addr, strptr(IP), len(IP) )
 	return trim(IP)
 end function

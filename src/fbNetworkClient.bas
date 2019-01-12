@@ -62,6 +62,20 @@ function fbNetworkClient.setSocket() as boolean
 	return true
 end function
 
+sub fbNetworkClient.errorHandler(errorCode as fbNetworkError)
+	mutexunlock(this._mutex)
+	if (this._socket) then
+		closesocket( this._socket )
+		this._socket = 0
+	end if
+	if (this._addressInfo) then
+		freeaddrinfo(this._addressInfo)		
+		this._addressInfo = 0
+	end if
+	
+	this.onError(errorCode)
+end sub
+
 function fbNetworkClient.sendData( byref _data as string) as boolean
 	mutexlock(this._mutex)
 		if (this._socket = 0) then
@@ -91,7 +105,7 @@ sub fbNetworkClient.close()
 	mutexunlock(this._mutex)
 end sub
 
-function fbNetworkClient.open(address as string, _port as uinteger, _protocol as TransportProtocol ) as boolean
+function fbNetworkClient.open(address as string, _port as uinteger, timeoutValue as integer = 60, _protocol as TransportProtocol ) as boolean
 	mutexlock(this._mutex)
 		if (this._socket <> 0) then
 			mutexunlock(this._mutex)
@@ -109,17 +123,35 @@ function fbNetworkClient.open(address as string, _port as uinteger, _protocol as
 			mutexunlock(this._mutex)
 			return false
 		end if
+		
+		dim socketFlags as integer = fcntl(this._socket, F_GETFL, 0)
+		fcntl(this._socket, F_SETFL, socketFlags or O_NONBLOCK)
+		if (connect( this._socket, this._addressInfo->ai_addr, this._addressInfo->ai_addrlen) <> 0) then
+			dim timeout as timeval
+			dim as fd_set fdset
+			timeout.tv_sec = timeoutValue
+			timeout.tv_usec = 0
+			FD_ZERO(@fdset)
+			FD_SET_(this._socket, @fdset)
+			dim foo as integer = select_(this._socket+1, 0, @fdset, 0, @timeout) 
+			if (foo = 1) then
+				dim as integer socketError
+				dim as socklen_t length = sizeof(so_error)
 
-		if( connect( this._socket, this._addressInfo->ai_addr, this._addressInfo->ai_addrlen ) = SOCKET_ERROR ) then
-			closesocket( this._socket )
-			freeaddrinfo(this._addressInfo)
-			this._socket = 0
-			this._addressInfo = 0
-			
-			mutexunlock(this._mutex)
-			this.onError(net_connectionRefused)
+				getsockopt(this._socket, SOL_SOCKET, SO_ERROR, @socketError, @length)
+				if (socketError) then
+					this.errorHandler(net_undefined)
+					return false
+				end if
+				fcntl(this._socket, F_SETFL, socketFlags AND NOT O_NONBLOCK)
+			else
+				this.errorHandler(net_timeout)
+				return false
+			end if
+		else
+			this.errorHandler(net_connectionRefused)
 			return false
-		end if		
+		end if
 	mutexunlock(this._mutex)
 	this.onConnect()
 		

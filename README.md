@@ -16,6 +16,7 @@ A very simple HTTP client can be found in the examples folder.
 High level:
 
 * [ ] Testing under real conditions
+* [ ] Testing in windows
 * [ ] Get some feedback on the API
 * [ ] Get some feedback on the actual network handling, especially the errorhandling
 * [ ] Implement fbNetworkServer
@@ -23,8 +24,8 @@ High level:
 Detail:
 
 * [ ] Make fbNetworkClient better aware of it's own connection status
-* [ ] Write and expose an isConnected property.
-* [ ] Make timeout configurable.
+* [x] Write and expose an isConnected property.
+* [x] Make timeout configurable.
 
 ## extending fbNetworkClient
 

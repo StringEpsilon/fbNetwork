@@ -5,6 +5,7 @@
 '/
 
 #include once "../src/fbNetworkClient.bas"
+const NEWLINE = !"\r\n"
 
 type httpClient extends fbNetworkClient
 	declare sub onConnect()
@@ -14,7 +15,7 @@ type httpClient extends fbNetworkClient
 end type
 
 sub httpClient.onConnect()
-	const NEWLINE = !"\r\n"
+
 	dim request as string
 
 	this.sendData(_
@@ -32,12 +33,12 @@ sub httpClient.onClose()
 end sub
 
 sub httpClient.onError(errorCode as fbNetworkError)
-	print "Error connecting to"& this.host & ":" & this.port
+	print "Error connecting to "& this.host & ":" & this.port
 end sub
 
 sub httpClient.onMessage(message as string)
 	print "Got data: ";
-	print trim(right(message, len(message) - instrRev(message, !"\r\n")-1),any !"\r\n")
+	print trim(right(message, len(message) - instrRev(message, NEWLINE)-1),any NEWLINE)
 end sub
 
 
@@ -45,6 +46,14 @@ dim client as httpClient
 print "Testing ipv4.icanhazip.com"
 client.open("ipv4.icanhazip.com", 80)
 
+
 print
-print "Testing ipv4.icanhazip.com"
+print "Testing ipv6.icanhazip.com"
 client.open("ipv6.icanhazip.com", 80)
+
+
+print
+print "Testing timeout, 5 seconds", time
+client.open("10.255.255.10", &b11111111, 5)
+print time
+

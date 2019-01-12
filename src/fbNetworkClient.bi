@@ -5,13 +5,15 @@
 '/
 
 #ifdef __FB_WIN32__
-#include once "win/winsock2.bi"
+	#include once "win/winsock2.bi"
 #else
-#include once "crt/netdb.bi"
-#include once "crt/sys/socket.bi"
-#include once "crt/netinet/in.bi"
-#include once "crt/arpa/inet.bi"
-#include once "crt/unistd.bi"
+	#include once "crt/netdb.bi"
+	#include once "crt/fcntl.bi"
+	#include once "crt/sys/socket.bi"
+	#include once "crt/netinet/in.bi"
+	#include once "crt/arpa/inet.bi"
+	#include once "crt/unistd.bi"
+	#include once "crt/sys/select.bi"
 #endif
 
 declare function resolveHost( byref hostname as string, port as uinteger ) as addrinfo ptr
@@ -52,11 +54,12 @@ type fbNetworkClient extends object
 		
 		declare function setSocket() as boolean
 		declare sub setInfo(port as integer, protocol as integer, host as string)
+		declare sub errorHandler(socketError as fbNetworkError)
 	public:
 		declare constructor()
 		declare destructor()
 
-		declare function open(address as string, port as uinteger, protocol as TransportProtocol = TCP) as boolean
+		declare function open(address as string, port as uinteger, timeout as clong = 60, protocol as TransportProtocol = TCP) as boolean
 		declare sub close()
 		declare function sendData(byref _data as string) as boolean
 

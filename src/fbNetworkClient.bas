@@ -129,6 +129,7 @@ function fbNetworkClient.open(address as string, _port as uinteger, timeoutValue
 			dim socketFlags as integer = fcntl(this._socket, F_GETFL, 0)
 			fcntl(this._socket, F_SETFL, socketFlags or O_NONBLOCK)
 		#endif
+		
 		if (connect( this._socket, this._addressInfo->ai_addr, this._addressInfo->ai_addrlen) <> 0) then
 			dim timeout as timeval
 			dim as fd_set fdset
@@ -136,6 +137,7 @@ function fbNetworkClient.open(address as string, _port as uinteger, timeoutValue
 			timeout.tv_usec = 0
 			FD_ZERO(@fdset)
 			FD_SET_(this._socket, @fdset)
+			
 			if ( select_(this._socket+1, 0, @fdset, 0, @timeout) = 1) then
 				dim as integer socketError
 				
@@ -170,13 +172,7 @@ function fbNetworkClient.open(address as string, _port as uinteger, timeoutValue
 	do 
 		messageLength = recv( this._socket, recvBuffer, fbNetwork.RECVBUFFLEN, 0 )
 		if( messageLength  <= 0 ) then
-			mutexlock(this._mutex)
-			closesocket(this._socket)
-			freeaddrinfo(this._addressInfo)	
-			this._socket = 0
-			this._addressInfo = 0
 			this.close()
-			mutexunlock(this._mutex)
 			return true
 		end if
 		recvbuffer[messageLength] = 0

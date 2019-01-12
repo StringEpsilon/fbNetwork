@@ -29,7 +29,6 @@ function getIpAdress(addressInfo as addrInfo ptr) as string
 		IP = space(16)
 		inet_ntop( addressInfo->ai_family, @(cast(sockaddr_in ptr,addressInfo->ai_addr)->sin_addr), strptr(IP), len(IP) )
 	end if
-	
 	return trim(IP)
 end function
 
@@ -124,8 +123,13 @@ function fbNetworkClient.open(address as string, _port as uinteger, timeoutValue
 			return false
 		end if
 		
-		dim socketFlags as integer = fcntl(this._socket, F_GETFL, 0)
-		fcntl(this._socket, F_SETFL, socketFlags or O_NONBLOCK)
+		#ifdef __FB_WIN32__
+			dim as integer blocking = 1
+			ioctlsocket(this._socket, FIONBIO, @blocking)
+		#else
+			dim socketFlags as integer = fcntl(this._socket, F_GETFL, 0)
+			fcntl(this._socket, F_SETFL, socketFlags or O_NONBLOCK)
+		#endif
 		if (connect( this._socket, this._addressInfo->ai_addr, this._addressInfo->ai_addrlen) <> 0) then
 			dim timeout as timeval
 			dim as fd_set fdset
@@ -133,17 +137,24 @@ function fbNetworkClient.open(address as string, _port as uinteger, timeoutValue
 			timeout.tv_usec = 0
 			FD_ZERO(@fdset)
 			FD_SET_(this._socket, @fdset)
-			dim foo as integer = select_(this._socket+1, 0, @fdset, 0, @timeout) 
-			if (foo = 1) then
+			if ( select_(this._socket+1, 0, @fdset, 0, @timeout) = 1) then
 				dim as integer socketError
-				dim as socklen_t length = sizeof(so_error)
-
-				getsockopt(this._socket, SOL_SOCKET, SO_ERROR, @socketError, @length)
+				
+				#ifdef __FB_WIN32__
+					socketError = WSAGetLastError()
+				#else
+					dim as socklen_t length = sizeof(so_error)
+					getsockopt(this._socket, SOL_SOCKET, SO_ERROR, @socketError, @length)
+				#endif
 				if (socketError) then
 					this.errorHandler(net_undefined)
 					return false
 				end if
-				fcntl(this._socket, F_SETFL, socketFlags AND NOT O_NONBLOCK)
+				#ifdef __FB_WIN32__
+					blocking = 0 : ioctlsocket(this._socket, FIONBIO, @blocking)
+				#else
+					fcntl(this._socket, F_SETFL, socketFlags or O_NONBLOCK)
+				#endif
 			else
 				this.errorHandler(net_timeout)
 				return false
@@ -160,12 +171,17 @@ function fbNetworkClient.open(address as string, _port as uinteger, timeoutValue
 	do 
 		messageLength = recv( this._socket, recvBuffer, fbNetwork.RECVBUFFLEN, 0 )
 		if( messageLength  <= 0 ) then
+			closesocket(this._socket)
+			freeaddrinfo(this._addressInfo)	
+			this._socket = 0
+			this._addressInfo = 0
 			this.close()
 			return true
 		end if
 		recvbuffer[messageLength] = 0
 		this.onMessage(recvbuffer)
 	loop
+
 	
 	return true
 end function

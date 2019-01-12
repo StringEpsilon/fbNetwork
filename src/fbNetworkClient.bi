@@ -6,6 +6,15 @@
 
 #ifdef __FB_WIN32__
 	#include once "win/winsock2.bi"
+
+	#include once "win/ws2tcpip.bi"
+	#ifndef inet_ntop
+	extern "C"
+	' For some reason, inet_ntop from the ws2tcpip.bi isn't defined on my machine.
+	declare function inet_ntop stdcall alias "inet_ntop"(byval Family as INT_, byval pAddr as PVOID, byval pStringBuf as LPSTR, byval StringBufSize as uinteger) as LPCSTR
+	end extern
+	#endif
+	WSAStartup( MAKEWORD( 2, 0 ), new WSAData )
 #else
 	#include once "crt/netdb.bi"
 	#include once "crt/fcntl.bi"
@@ -15,6 +24,8 @@
 	#include once "crt/unistd.bi"
 	#include once "crt/sys/select.bi"
 #endif
+
+
 
 declare function resolveHost( byref hostname as string, port as uinteger ) as addrinfo ptr
 declare function getIpAdress(addressInfo as addrInfo ptr) as string
@@ -59,7 +70,7 @@ type fbNetworkClient extends object
 		declare constructor()
 		declare destructor()
 
-		declare function open(address as string, port as uinteger, timeout as clong = 60, protocol as TransportProtocol = TCP) as boolean
+		declare function open(address as string, _port as uinteger, timeoutValue as integer = 60, _protocol as TransportProtocol = TCP ) as boolean
 		declare sub close()
 		declare function sendData(byref _data as string) as boolean
 

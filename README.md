@@ -24,6 +24,7 @@ Detail:
 
 * [ ] Make fbNetworkClient better aware of it's own connection status
 * [ ] Write and expose an isConnected property.
+* [ ] Make timeout configurable.
 
 ## extending fbNetworkClient
 
@@ -53,7 +54,10 @@ The following belong to the public API of the baseclass and thus your client:
 
 ```function open(address as string, port as uinteger, protocol as TransportProtocol = TCP) as boolean```
 
-Connect to the given address and port. Returns true if the connection was established successful.
+Connect to the given address and port. 
+
+Returns false if connection could not be established. 
+Returns true **after** the connection was disconnected regularly. That might take a while ;-)
 
 ```sub close()```
 

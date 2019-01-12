@@ -35,11 +35,12 @@ end type
 
 enum fbNetworkError
 	net_undefined = 0
-	net_timeout
-	net_cantCreateSocket
-	net_connectionInUse
-	net_invalidPort
-	net_connectionRefused	
+	net_timeout = 1
+	net_cantCreateSocket = 2
+	net_connectionInUse = 3
+	net_invalidPort = 4
+	net_connectionRefused = 5
+	net_unknownHost = 6
 end enum
 
 type fbNetworkClient extends object
@@ -62,6 +63,7 @@ type fbNetworkClient extends object
 		declare property host() as string
 		declare property ip() as string
 		declare property port() as integer
+		declare property isConnected() as boolean
 		
 		declare abstract sub onConnect()
 		declare abstract sub onClose()

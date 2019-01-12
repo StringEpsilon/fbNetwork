@@ -100,6 +100,10 @@ function fbNetworkClient.open(address as string, _port as uinteger, _protocol as
 		end if
 		
 		this._addressInfo = resolveHost(address, _port)
+		if (this._addressInfo = 0) then
+			this.onError(net_unknownHost)
+		end if
+		
 		this.setInfo(_port, _protocol, address)
 		if (this.setSocket() = false) then
 			mutexunlock(this._mutex)
@@ -109,6 +113,9 @@ function fbNetworkClient.open(address as string, _port as uinteger, _protocol as
 		if( connect( this._socket, this._addressInfo->ai_addr, this._addressInfo->ai_addrlen ) = SOCKET_ERROR ) then
 			closesocket( this._socket )
 			freeaddrinfo(this._addressInfo)
+			this._socket = 0
+			this._addressInfo = 0
+			
 			mutexunlock(this._mutex)
 			this.onError(net_connectionRefused)
 			return false
@@ -131,6 +138,9 @@ function fbNetworkClient.open(address as string, _port as uinteger, _protocol as
 	return true
 end function
 
+property fbNetworkClient.isConnected() as boolean
+	return this._socket <> 0
+end property
 
 property fbNetworkClient.host() as string
 	return this.info.host

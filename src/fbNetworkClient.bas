@@ -108,7 +108,6 @@ function fbNetworkClient.open(address as string, _port as uinteger, timeoutValue
 	mutexlock(this._mutex)
 		if (this._socket <> 0) then
 			mutexunlock(this._mutex)
-			this.onError(net_connectionInUse)
 			return false
 		end if
 		
@@ -171,11 +170,13 @@ function fbNetworkClient.open(address as string, _port as uinteger, timeoutValue
 	do 
 		messageLength = recv( this._socket, recvBuffer, fbNetwork.RECVBUFFLEN, 0 )
 		if( messageLength  <= 0 ) then
+			mutexlock(this._mutex)
 			closesocket(this._socket)
 			freeaddrinfo(this._addressInfo)	
 			this._socket = 0
 			this._addressInfo = 0
 			this.close()
+			mutexunlock(this._mutex)
 			return true
 		end if
 		recvbuffer[messageLength] = 0

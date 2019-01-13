@@ -11,6 +11,11 @@ implement their parsing, event handling and so on on top.
 
 A very simple HTTP client can be found in the examples folder.
 
+## Restrictions, known issues, ...
+
+* Windows XP is not supported, since inet_ntop is only available in Vista and up.
+* fbNetworkServer is not ready for use.
+
 ## TODO
 
 High level:
@@ -26,6 +31,8 @@ Detail:
 * [ ] Make fbNetworkClient better aware of it's own connection status
 * [x] Write and expose an isConnected property.
 * [x] Make timeout configurable.
+* [ ] Figure out a way to close the server properly and end it's thread.
+* [ ] Call handlers for client related events on server in thread.
 
 ## extending fbNetworkClient
 

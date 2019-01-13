@@ -6,7 +6,7 @@
 #include once "./common.bi"
 
 
-type fbNetworkServer extends object
+type fbServer extends object
 	private:
 		_addressInfo as sockaddr_in ptr
 		_socket as SOCKET
@@ -17,7 +17,7 @@ type fbNetworkServer extends object
 		
 		declare function setSocket() as boolean
 		declare sub setInfo(port as integer, protocol as integer, host as string)
-		declare static sub eventLoop(this as fbNetworkServer ptr)
+		declare static sub eventLoop(this as fbServer ptr)
 	protected:
 		_clients as socket ptr
 	public:

@@ -4,10 +4,12 @@
 	file, You can obtain one at http://mozilla.org/MPL/2.0/. 
 '/
 #include once "../src/fbNetworkClient.bas"
-#include once "../src/fbNetworkServer.bas"
+#include once "../src/fbServer.bas"
 const NEWLINE = !"\r\n"
 
-type echoServer extends fbNetworkServer
+/' ### Server code. Just a simple server that echos all messages back to the client. ###'/
+
+type echoServer extends fbServer
 	declare sub onConnection(clientSocket as socket)
 	declare sub onMessage(client as socket, message as string)
 	declare sub onDisconnect(clientSocket as socket)
@@ -21,12 +23,12 @@ sub echoServer.onDisconnect(clientSocket as socket)
 	print "[Server] Client '"& clientSocket &"' disconnected"
 end sub
 
-
 sub echoServer.onMessage(client as socket, message as string)
 	print "[Server] Client '"& client &"' sent "& message
 	this.sendData(client,message)
 end sub
 
+/' ### Client code. It just connects, says 'hi' and closes if the response arrives. ###'/
 
 type echoClient extends fbNetworkClient
 	declare sub onConnect()

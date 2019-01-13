@@ -4,22 +4,22 @@
 	file, You can obtain one at http://mozilla.org/MPL/2.0/. 
 '/
 
-#include once "./fbNetworkServer.bi"
+#include once "./fbServer.bi"
 #include once "./common.bas"
 #include once "crt.bi"
 
-constructor fbNetworkServer()
+constructor fbServer()
 	this._mutex = mutexcreate()
 end constructor
 
-destructor fbNetworkServer()
+destructor fbServer()
 	if (this._socket <> 0) then
 		this.close()
 	end if
 	mutexdestroy(this._mutex)
 end destructor
 
-function fbNetworkServer.setSocket() as boolean
+function fbServer.setSocket() as boolean
 	this._socket = opensocket( AF_INET, SOCK_STREAM, IPPROTO_TCP )
 	if (this._socket = 0) then
 		this.onError()
@@ -28,7 +28,7 @@ function fbNetworkServer.setSocket() as boolean
 	return true
 end function
 
-function fbNetworkServer.sendData(client as socket,  byref _data as string) as boolean
+function fbServer.sendData(client as socket,  byref _data as string) as boolean
 	mutexlock(this._mutex)
 		if (this._socket = 0) then
 			mutexunlock(this._mutex)
@@ -44,7 +44,7 @@ function fbNetworkServer.sendData(client as socket,  byref _data as string) as b
 	return true
 end function
 
-sub fbNetworkServer.close()
+sub fbServer.close()
 	mutexlock(this._mutex)
 		closesocket( this._socket )
 		delete(this._addressInfo)
@@ -55,7 +55,7 @@ sub fbNetworkServer.close()
 	mutexunlock(this._mutex)
 end sub
 
-function fbNetworkServer.start(_port as uinteger, maxConnections as integer = 100, _protocol as TransportProtocol ) as boolean
+function fbServer.start(_port as uinteger, maxConnections as integer = 100, _protocol as TransportProtocol ) as boolean
 	mutexlock(this._mutex)
 		if (this._socket <> 0) then
 			mutexunlock(this._mutex)
@@ -87,11 +87,11 @@ function fbNetworkServer.start(_port as uinteger, maxConnections as integer = 10
 		end if
 	mutexunlock(this._mutex)
 	this.onEstablish()
-	this._handle = threadCreate(cast(any ptr, @fbNetworkServer.eventLoop), @this)
+	this._handle = threadCreate(cast(any ptr, @fbServer.eventLoop), @this)
 	return true
 end function
 
-sub fbNetworkServer.eventLoop(this as fbNetworkServer ptr)
+sub fbServer.eventLoop(this as fbServer ptr)
 	dim readfds as fd_set ptr = new fd_set
 	dim maxSD as socket = this->_socket
 	dim clientAddress as sockaddr ptr = cast(sockaddr ptr, new sockaddr_in)
@@ -151,29 +151,29 @@ sub fbNetworkServer.eventLoop(this as fbNetworkServer ptr)
 	this->onClose()
 end sub
 
-sub fbNetworkServer.waitForShutdown()
+sub fbServer.waitForShutdown()
 	threadwait this._handle
 end sub
 
-property fbNetworkServer.port() as integer
+property fbServer.port() as integer
 	return this._port
 end property
 
-sub fbNetworkServer.onEstablish()
+sub fbServer.onEstablish()
 end sub
 
-sub fbNetworkServer.onConnection(clientSocket as socket)
+sub fbServer.onConnection(clientSocket as socket)
 end sub
 
-sub fbNetworkServer.onDisconnect(clientSocket as socket)
+sub fbServer.onDisconnect(clientSocket as socket)
 end sub
 
-sub fbNetworkServer.onMessage(client as socket, message as string)
+sub fbServer.onMessage(client as socket, message as string)
 end sub
 
-sub fbNetworkServer.onClose()
+sub fbServer.onClose()
 end sub
 
-sub fbNetworkServer.onError()
+sub fbServer.onError()
 end sub
 

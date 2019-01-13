@@ -7,9 +7,11 @@
 const NEWLINE = !"\r\n"
 
 type httpClient extends fbNetworkClient
+	' We only declare the callbacks we need for this example:
 	declare sub onConnect()
 	declare sub onError(errorCode as fbNetworkError)
 	declare sub onMessage(message as string)
+	'declare sub onClose()
 end type
 
 sub httpClient.onConnect()
@@ -25,10 +27,12 @@ sub httpClient.onError(errorCode as fbNetworkError)
 end sub
 
 sub httpClient.onMessage(message as string)
+	' For the sake of readable output, this cuts out just the IP part of the response.
 	print "Your IP: "+ trim(right(message, len(message) - instrRev(message, NEWLINE)-1),any NEWLINE)
 end sub
 
 dim client as httpClient
+
 print "Testing ipv4.icanhazip.com"
 client.open("ipv4.icanhazip.com", 80)
 
@@ -38,5 +42,6 @@ client.open("ipv6.icanhazip.com", 80)
 
 print
 print "Testing timeout, 5 seconds", time
-client.open("10.255.255.10", 1234, 5)
+' TEST-NET-2 address, this should always timeout.
+client.open("198.51.100.0", 1234, 5)
 print time

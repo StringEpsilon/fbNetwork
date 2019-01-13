@@ -5,33 +5,7 @@
 '/
 
 #include once "./fbNetworkClient.bi"
-
-function resolveHost( byref hostname as string, port as uinteger ) as addrinfo ptr
-	dim hints as addrInfo ptr = new addrinfo
-	dim addressInfo as addrInfo ptr
-	hints->ai_family = AF_UNSPEC
-    hints->ai_socktype = SOCK_STREAM
-
-	
-	getAddrInfo(hostname, str(port), hints, @addressInfo)
-	delete hints
-	return addressInfo
-end function
-
-function getIpAdress(addressInfo as addrInfo ptr) as string
-	if (addressInfo = 0) then return ""
-	
-	dim IP as string 
-	if ( addressInfo->ai_family = AF_INET6 ) then
-		IP = space(46)
-		inet_ntop( addressInfo->ai_family, @(cast(sockaddr_in6 ptr,addressInfo->ai_addr)->sin6_addr), strptr(IP), len(IP) )
-	else
-		IP = space(16)
-		inet_ntop( addressInfo->ai_family, @(cast(sockaddr_in ptr,addressInfo->ai_addr)->sin_addr), strptr(IP), len(IP) )
-	end if
-	return trim(IP)
-end function
-
+#include once "./common.bas"
 
 constructor fbNetworkClient()
 	this._mutex = mutexcreate()
@@ -154,7 +128,7 @@ function fbNetworkClient.open(address as string, _port as uinteger, timeoutValue
 				#ifdef __FB_WIN32__
 					blocking = 0 : ioctlsocket(this._socket, FIONBIO, @blocking)
 				#else
-					fcntl(this._socket, F_SETFL, socketFlags or O_NONBLOCK)
+					fcntl(this._socket, F_SETFL, socketFlags AND NOT O_NONBLOCK)
 				#endif
 			else
 				this.errorHandler(net_timeout)
@@ -171,14 +145,13 @@ function fbNetworkClient.open(address as string, _port as uinteger, timeoutValue
 	dim recvbuffer as zstring * fbNetwork.RECVBUFFLEN+1
 	do 
 		messageLength = recv( this._socket, recvBuffer, fbNetwork.RECVBUFFLEN, 0 )
-		if( messageLength  <= 0 ) then
+		if( messageLength <= 0 ) then
 			this.close()
 			return true
 		end if
 		recvbuffer[messageLength] = 0
 		this.onMessage(recvbuffer)
 	loop
-
 	
 	return true
 end function

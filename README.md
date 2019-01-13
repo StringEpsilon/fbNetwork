@@ -14,29 +14,29 @@ A very simple HTTP client can be found in the examples folder.
 ## Restrictions, known issues, ...
 
 * Windows XP is not supported, since inet_ntop is only available in Vista and up.
-* fbNetworkServer is not ready for use.
+* fbServer is untested and doesn't work on windows yet
 
 ## TODO
 
 High level:
 
 * [ ] Testing under real conditions
-* [ ] Testing in windows
+* [ ] The the client on windows
 * [ ] Get some feedback on the API
 * [ ] Get some feedback on the actual network handling, especially the errorhandling
-* [ ] Implement fbNetworkServer
+* [ ] Test fbServer and make it work on windows.
 
 Detail:
 
 * [ ] Make fbNetworkClient better aware of it's own connection status
 * [x] Write and expose an isConnected property.
 * [x] Make timeout configurable.
-* [ ] Figure out a way to close the server properly and end it's thread.
+* [x] Figure out a way to close the server properly and end it's thread.
 * [ ] Call handlers for client related events on server in thread.
 
 ## extending fbNetworkClient
 
-fbNetworkClient is the class you extend for writing your own network client.
+fbNetworkClient (name might change) is the class you extend for writing your own network client.
 
 Your class can to implement the following subs  as needed. 
 Only onMessage must be implemented, as it it abstract in the base class.
@@ -61,7 +61,7 @@ Gets called when a message / data is received from the server.
 
 The following belong to the public API of the baseclass and thus your client:
 
-```function open(address as string, port as uinteger, protocol as TransportProtocol = TCP) as boolean```
+```function open(address as string, port as uinteger, timeout as integer, protocol as TransportProtocol = TCP) as boolean```
 
 Connect to the given address and port. 
 
@@ -75,3 +75,55 @@ Close the connection of the client, if there currently is a connection.
 ```function sendData(byref _data as string) as boolean```
 
 Sends data to the server. Returns true if sending was successful.
+
+## extending fbServer
+
+Your class can to implement the following subs  as needed. Some of these might change from virtual to abstract later.
+
+Also: I might later change how server implementations are supposed to handle clients. I don't like socket parameter.
+
+```sub onEstablish()```
+
+Gets called when the server is ready to listen for incomming connections.
+
+```sub onConnection(client as socket)```
+
+Gets called when a client connects, with the socket for that client as a parameter.
+
+```sub onDisconnect(client as socket)```
+
+Gets called when a client disconnects.
+
+Note: The socket will immediately be closed after onDisconnect is called.
+
+```sub onMessage(client as socket, message as string)```
+Gets called when a client sent data.
+
+```sub onClose()```
+Called when the server closed and exited it's main eventloop. You can savely restart the server after this was called.
+
+```sub onError()```
+Currently unused and will probably get a parameter or two later.
+
+## fbServer API
+
+The following belong to the public API of the baseclass and thus your client:
+
+```function open(port as uinteger, maxConnections as integer = 100, protocol as TransportProtocol = TCP) as boolean```
+
+Starts the server with the given port, connection pool size and protocol. 
+
+This also creates a thread interally you can await with ```waitForShutdown```.
+
+```sub close()```
+
+Closes the server. It can take up to a second for the internal thread to clear after you called this.
+
+```sub waitForShutdown()```
+
+Waits for the internal thread of the server to finish. 
+
+
+```function sendData(client as socket, _data as string) as boolean```
+
+Sends data to the specified client socket. Returns true if sending was successful.

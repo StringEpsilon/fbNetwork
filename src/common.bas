@@ -5,7 +5,7 @@
 '/
 
 #include once "./common.bi"
-#include once "./fbNetworkClient.bi"
+
 
 function resolveHost( byref hostname as string, port as uinteger ) as addrinfo ptr
 	dim hints as addrInfo ptr = new addrinfo

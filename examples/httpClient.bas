@@ -8,24 +8,16 @@ const NEWLINE = !"\r\n"
 
 type httpClient extends fbNetworkClient
 	declare sub onConnect()
-	declare sub onClose()
 	declare sub onError(errorCode as fbNetworkError)
 	declare sub onMessage(message as string)
 end type
 
 sub httpClient.onConnect()
 	this.sendData(_
-		"GET / " + "HTTP/1.1" + NEWLINE + _
-		"Host: httpstat.us " + NEWLINE + _
-		"Connection: close" + NEWLINE + _
-		"User-Agent: GetHTTP 0.0" + NEWLINE + _
-		NEWLINE )
-	
-	print "Connected to "& this.host & ":" & this.port
-end sub
-
-sub httpClient.onClose()
-	print "Disonnected from "& this.host & ":" & this.port
+		!"GET / HTTP/1.1 \r\n" + _
+		!"Host: httpstat.us \r\n" + _
+		!"Connection: close \r\n" + _
+		!"User-Agent: GetHTTP 0.0 \r\n\r\n")
 end sub
 
 sub httpClient.onError(errorCode as fbNetworkError)
@@ -33,8 +25,7 @@ sub httpClient.onError(errorCode as fbNetworkError)
 end sub
 
 sub httpClient.onMessage(message as string)
-	print "Got data: ";
-	print trim(right(message, len(message) - instrRev(message, NEWLINE)-1),any NEWLINE)
+	print "Your IP: "+ trim(right(message, len(message) - instrRev(message, NEWLINE)-1),any NEWLINE)
 end sub
 
 dim client as httpClient
@@ -47,5 +38,5 @@ client.open("ipv6.icanhazip.com", 80)
 
 print
 print "Testing timeout, 5 seconds", time
-client.open("10.255.255.10", &b11111111, 5)
+client.open("10.255.255.10", 1234, 5)
 print time

@@ -31,7 +31,8 @@ Detail:
 
 fbNetworkClient is the class you extend for writing your own network client.
 
-Your class has to implement the following subs to work, as they are abstract in the base class:
+Your class can to implement the following subs  as needed. 
+Only onMessage must be implemented, as it it abstract in the base class.
 
 ```sub onConnect()```
 

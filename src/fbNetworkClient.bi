@@ -46,8 +46,8 @@ type fbNetworkClient extends object
 		declare property port() as integer
 		declare property isConnected() as boolean
 		
-		declare abstract sub onConnect()
-		declare abstract sub onClose()
-		declare abstract sub onError(errorCode as fbNetworkError = net_undefined)
+		declare virtual sub onConnect()
+		declare virtual sub onClose()
+		declare virtual sub onError(errorCode as fbNetworkError = net_undefined)
 		declare abstract sub onMessage(message as string)
 end type

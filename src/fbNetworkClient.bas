@@ -171,3 +171,12 @@ end property
 property fbNetworkClient.port() as integer
 	return this.info.port
 end property
+
+sub fbNetworkClient.onConnect()
+end sub
+
+sub fbNetworkClient.onClose()
+end sub
+
+sub fbNetworkClient.onError(errorCode as fbNetworkError = net_undefined)
+end sub

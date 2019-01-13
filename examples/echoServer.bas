@@ -10,14 +10,20 @@ const NEWLINE = !"\r\n"
 type echoServer extends fbNetworkServer
 	declare sub onConnection(clientSocket as socket)
 	declare sub onMessage(client as socket, message as string)
+	declare sub onDisconnect(clientSocket as socket)
 end type
 
 sub echoServer.onConnection(clientSocket as socket)
-	print "[Server] Client connected"
+	print "[Server] Client '"& clientSocket &"' connected"
 end sub
 
+sub echoServer.onDisconnect(clientSocket as socket)
+	print "[Server] Client '"& clientSocket &"' disconnected"
+end sub
+
+
 sub echoServer.onMessage(client as socket, message as string)
-	print "[Server] Client sent "; message
+	print "[Server] Client '"& client &"' sent "& message
 	this.sendData(client,message)
 end sub
 
@@ -41,12 +47,10 @@ dim client as echoClient
 dim server as echoServer
 server.start(8080)
 
-'~ print "Testing ipv4.icanhazip.com"
-'~ client.open("ipv4.icanhazip.com", 80)
-
-'~ print
-'~ print "Testing ipv6.icanhazip.com"
-'~ client.open("ipv6.icanhazip.com", 80)
-
 client.open("127.0.0.1", 8080, 5)
-sleep 100
+client.open("127.0.0.1", 8080, 5)
+client.open("127.0.0.1", 8080, 5)
+
+server.close()
+server.waitForShutdown()
+

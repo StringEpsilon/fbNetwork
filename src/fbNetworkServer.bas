@@ -47,7 +47,6 @@ end function
 sub fbNetworkServer.close()
 	mutexlock(this._mutex)
 		closesocket( this._socket )
-		? "closed socket"
 		delete(this._addressInfo)
 		this._socket = 0
 		this._addressInfo = 0
@@ -88,7 +87,7 @@ function fbNetworkServer.start(_port as uinteger, maxConnections as integer = 10
 		end if
 	mutexunlock(this._mutex)
 	this.onEstablish()
-	this._handle = threadCreate(@fbNetworkServer.eventLoop, @this)
+	this._handle = threadCreate(cast(any ptr, @fbNetworkServer.eventLoop), @this)
 	return true
 end function
 
@@ -98,10 +97,13 @@ sub fbNetworkServer.eventLoop(this as fbNetworkServer ptr)
 	dim clientAddress as sockaddr ptr = cast(sockaddr ptr, new sockaddr_in)
 	dim newSocket as socket
 	dim addrLen as socklen_t = sizeof(sockaddr_in)
-
+	dim as timeval ptr timeout = new timeval
+	timeout->tv_sec = 1
+	timeout->tv_usec = 0
 	this->_clients = callocate(sizeof(socket)* this->_maxConnections)
 	do
 		FD_ZERO(readfds)     
+		mutexlock(this->_mutex)
         FD_SET_(this->_socket, readfds)
 		maxSd = this->_socket
 		for i as integer = 0 to this->_maxConnections
@@ -109,14 +111,13 @@ sub fbNetworkServer.eventLoop(this as fbNetworkServer ptr)
 				maxSd = this->_clients[i]
 			end if
 		next
-		if (select_( maxSD + 1 , readfds , NULL , NULL , NULL) < 0) then
-			' TODO: Errorhandling
+		if (select_( maxSD + 1 , readfds , NULL , NULL , timeout) < 0) then
 			return
 		end if
+		
 		if (FD_ISSET(this->_socket, readfds)) then
 			newSocket = accept(this->_socket,clientAddress, @addrLen)
 			if newSocket = -1 then 
-				' TODO: Errorhandling
 				return
 			end if
 			for i as integer = 0 to this->_maxConnections
@@ -126,23 +127,32 @@ sub fbNetworkServer.eventLoop(this as fbNetworkServer ptr)
 				end if
 			next
 			maxSD = newSocket
+			mutexunlock(this->_mutex)
             this->onConnection(newSocket)
 		end if
+		
 		for i as integer = 0 to this->_maxConnections
 			if (this->_clients[i] <> 0 ) then
 				dim buffer as zstring * fbNetwork.RECVBUFFLEN+1
 				dim messageLength as integer
 				messageLength = recv( this->_clients[i], buffer, fbNetwork.RECVBUFFLEN,0)
 				if ( messageLength = 0) then
-					'this->onDisconnect(this->_clients[i])
+					mutexunlock(this->_mutex)
+					this->onDisconnect(this->_clients[i])
 					closesocket(this->_clients[i])
 					this->_clients[i] = 0
 				elseif (messageLength > 0) then
+					mutexunlock(this->_mutex)
 					this->onMessage(this->_clients[i], buffer)
 				end if
 			end if
         next
 	loop until this->_socket = 0
+	this->onClose()
+end sub
+
+sub fbNetworkServer.waitForShutdown()
+	threadwait this._handle
 end sub
 
 property fbNetworkServer.port() as integer
@@ -155,6 +165,9 @@ end sub
 sub fbNetworkServer.onConnection(clientSocket as socket)
 end sub
 
+sub fbNetworkServer.onDisconnect(clientSocket as socket)
+end sub
+
 sub fbNetworkServer.onMessage(client as socket, message as string)
 end sub
 
@@ -163,3 +176,4 @@ end sub
 
 sub fbNetworkServer.onError()
 end sub
+

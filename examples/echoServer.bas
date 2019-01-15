@@ -3,7 +3,7 @@
 	License, v. 2.0. If a copy of the MPL was not distributed with this
 	file, You can obtain one at http://mozilla.org/MPL/2.0/. 
 '/
-#include once "../src/fbNetworkClient.bas"
+#include once "../src/fbClient.bas"
 #include once "../src/fbServer.bas"
 const NEWLINE = !"\r\n"
 
@@ -30,7 +30,7 @@ end sub
 
 /' ### Client code. It just connects, says 'hi' and closes if the response arrives. ###'/
 
-type echoClient extends fbNetworkClient
+type echoClient extends fbClient
 	declare sub onConnect()
 	declare sub onMessage(message as string)
 end type
@@ -44,6 +44,8 @@ sub echoClient.onMessage(message as string)
 	print "[Client] Server replied: "; message
 	this.close()
 end sub
+
+/' Test code: Start server, then connect the client 3 times. Close server, shutdown '/
 
 dim client as echoClient
 dim server as echoServer

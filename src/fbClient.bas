@@ -4,28 +4,28 @@
 	file, You can obtain one at http://mozilla.org/MPL/2.0/. 
 '/
 
-#include once "./fbNetworkClient.bi"
+#include once "./fbClient.bi"
 #include once "./common.bas"
 
-constructor fbNetworkClient()
+constructor fbClient()
 	this._mutex = mutexcreate()
 end constructor
 
-destructor fbNetworkClient()
+destructor fbClient()
 	if (this._socket <> 0) then
 		this.close()
 	end if
 	mutexdestroy(this._mutex)
 end destructor
 
-sub fbNetworkClient.setInfo(_port as integer, _protocol as integer, _host as string)
+sub fbClient.setInfo(_port as integer, _protocol as integer, _host as string)
 	this.info.ipAddress = getIpAdress(this._addressInfo)
 	this.info.port = _port
 	this.info.host = _host
 	this.info.protocol = _protocol
 end sub
 
-function fbNetworkClient.setSocket() as boolean
+function fbClient.setSocket() as boolean
 	this._socket = opensocket( this._addressInfo->ai_family, SOCK_STREAM, IPPROTO_TCP )
 	if (this._socket = 0) then
 		freeaddrinfo(this._addressInfo)
@@ -35,7 +35,7 @@ function fbNetworkClient.setSocket() as boolean
 	return true
 end function
 
-sub fbNetworkClient.errorHandler(errorCode as fbNetworkError)
+sub fbClient.errorHandler(errorCode as fbNetworkError)
 	mutexunlock(this._mutex)
 	if (this._socket) then
 		closesocket( this._socket )
@@ -49,7 +49,7 @@ sub fbNetworkClient.errorHandler(errorCode as fbNetworkError)
 	this.onError(errorCode)
 end sub
 
-function fbNetworkClient.sendData( byref _data as string) as boolean
+function fbClient.sendData( byref _data as string) as boolean
 	mutexlock(this._mutex)
 		if (this._socket = 0) then
 			mutexunlock(this._mutex)
@@ -66,7 +66,7 @@ function fbNetworkClient.sendData( byref _data as string) as boolean
 	return true
 end function
 
-sub fbNetworkClient.close()
+sub fbClient.close()
 	mutexlock(this._mutex)
 		closesocket( this._socket )
 		freeaddrinfo(this._addressInfo)
@@ -78,7 +78,7 @@ sub fbNetworkClient.close()
 	mutexunlock(this._mutex)
 end sub
 
-function fbNetworkClient.open(address as string, _port as uinteger, timeoutValue as integer = 60, _protocol as TransportProtocol ) as boolean
+function fbClient.open(address as string, _port as uinteger, timeoutValue as integer = 60, _protocol as TransportProtocol ) as boolean
 	mutexlock(this._mutex)
 		if (this._socket <> 0) then
 			mutexunlock(this._mutex)
@@ -156,27 +156,27 @@ function fbNetworkClient.open(address as string, _port as uinteger, timeoutValue
 	return true
 end function
 
-property fbNetworkClient.isConnected() as boolean
+property fbClient.isConnected() as boolean
 	return this._socket <> 0
 end property
 
-property fbNetworkClient.host() as string
+property fbClient.host() as string
 	return this.info.host
 end property
 
-property fbNetworkClient.ip() as string
+property fbClient.ip() as string
 	return this.info.ipAddress
 end property
 
-property fbNetworkClient.port() as integer
+property fbClient.port() as integer
 	return this.info.port
 end property
 
-sub fbNetworkClient.onConnect()
+sub fbClient.onConnect()
 end sub
 
-sub fbNetworkClient.onClose()
+sub fbClient.onClose()
 end sub
 
-sub fbNetworkClient.onError(errorCode as fbNetworkError = net_undefined)
+sub fbClient.onError(errorCode as fbNetworkError = net_undefined)
 end sub

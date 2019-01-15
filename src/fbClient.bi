@@ -23,7 +23,7 @@ enum fbNetworkError
 	net_unknownHost = 6
 end enum
 	
-type fbNetworkClient extends object
+type fbClient extends object
 	private:
 		_socket as SOCKET
 		_addressInfo as addrInfo ptr

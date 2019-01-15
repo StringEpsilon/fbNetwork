@@ -3,10 +3,10 @@
 	License, v. 2.0. If a copy of the MPL was not distributed with this
 	file, You can obtain one at http://mozilla.org/MPL/2.0/. 
 '/
-#include once "../src/fbNetworkClient.bas"
+#include once "../src/fbClient.bas"
 const NEWLINE = !"\r\n"
 
-type httpClient extends fbNetworkClient
+type httpClient extends fbClient
 	' We only declare the callbacks we need for this example:
 	declare sub onConnect()
 	declare sub onError(errorCode as fbNetworkError)

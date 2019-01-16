@@ -6,6 +6,16 @@
 
 #include once "./common.bi"
 
+	type _fbClient as fbClient
+
+	type _openParams
+		client as _fbClient ptr
+		address as string
+		port as uinteger
+		timeoutValue as integer = 60
+		protocol as TransportProtocol = TCP
+	end type
+
 type fbConnectionInfo
 	ipAddress as string
 	host as string
@@ -29,16 +39,20 @@ type fbClient extends object
 		_addressInfo as addrInfo ptr
 		_mutex as any ptr
 		info as fbConnectionInfo
+		_threadHandle as any ptr
 		
 		declare function setSocket() as boolean
 		declare sub setInfo(port as integer, protocol as integer, host as string)
 		declare sub errorHandler(socketError as fbNetworkError)
+		declare static sub thunkOpen(params as _openParams ptr) 
 	public:
 		declare constructor()
 		declare destructor()
 
 		declare function open(address as string, _port as uinteger, timeoutValue as integer = 60, _protocol as TransportProtocol = TCP ) as boolean
+		declare function openThreaded(address as string, _port as uinteger, timeoutValue as integer = 60, _protocol as TransportProtocol = TCP ) as boolean
 		declare sub close()
+		declare sub waitClose()
 		declare function sendData(byref _data as string) as boolean
 
 		declare property host() as string

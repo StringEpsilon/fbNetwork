@@ -78,7 +78,11 @@ sub fbClient.close()
 	mutexunlock(this._mutex)
 end sub
 
-function fbClient.open(address as string, _port as uinteger, timeoutValue as integer = 60, _protocol as TransportProtocol ) as boolean
+sub fbClient.thunkOpen(params as _openParams ptr)
+	params->client->open( params->address, params->port, params->timeoutValue, params->protocol)
+end sub
+
+function fbClient.open(address as string, _port as uinteger, timeoutValue as integer = 60, _protocol as TransportProtocol) as boolean
 	mutexlock(this._mutex)
 		if (this._socket <> 0) then
 			mutexunlock(this._mutex)
@@ -88,6 +92,7 @@ function fbClient.open(address as string, _port as uinteger, timeoutValue as int
 		this._addressInfo = resolveHost(address, _port)
 		if (this._addressInfo = 0) then
 			this.onError(net_unknownHost)
+			return false
 		end if
 		
 		this.setInfo(_port, _protocol, address)
@@ -103,7 +108,7 @@ function fbClient.open(address as string, _port as uinteger, timeoutValue as int
 			dim socketFlags as integer = fcntl(this._socket, F_GETFL, 0)
 			fcntl(this._socket, F_SETFL, socketFlags or O_NONBLOCK)
 		#endif
-		
+	
 		if (connect( this._socket, this._addressInfo->ai_addr, this._addressInfo->ai_addrlen) <> 0) then
 			dim timeout as timeval
 			dim as fd_set fdset
@@ -139,8 +144,9 @@ function fbClient.open(address as string, _port as uinteger, timeoutValue as int
 			return false
 		end if
 	mutexunlock(this._mutex)
+	
 	this.onConnect()
-		
+	
 	dim messageLength as integer
 	dim recvbuffer as zstring * fbNetwork.RECVBUFFLEN+1
 	do 
@@ -152,7 +158,24 @@ function fbClient.open(address as string, _port as uinteger, timeoutValue as int
 		recvbuffer[messageLength] = 0
 		this.onMessage(recvbuffer)
 	loop
-	
+
+	return true
+end function
+
+sub fbClient.waitClose()
+	if (this._threadHandle <> 0) then
+		threadwait this._threadHandle
+	end if
+end sub
+
+function fbClient.openThreaded(address as string, _port as uinteger, timeoutValue as integer = 60, _protocol as TransportProtocol) as boolean
+	dim as _openParams ptr params = new _openParams
+	params->client = @this
+	params->address = address
+	params->port = _port
+	params->timeoutValue = timeoutValue
+	params->protocol = _protocol
+	this._threadHandle = threadCreate(cast(any ptr, @fbClient.thunkOpen), params)
 	return true
 end function
 

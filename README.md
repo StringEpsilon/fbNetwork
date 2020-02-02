@@ -11,20 +11,14 @@ implement their parsing, event handling and so on on top.
 
 A very simple HTTP client can be found in the examples folder.
 
-## Restrictions, known issues, ...
-
-* Windows XP is not supported, since inet_ntop is only available in Vista and up.
-* fbServer is untested and doesn't work on windows yet
-
 ## TODO
 
 High level:
 
 * [ ] Testing under real conditions
-* [ ] The the client on windows
+* [ ] Test the client and server thoroughly on windows
 * [ ] Get some feedback on the API
 * [ ] Get some feedback on the actual network handling, especially the errorhandling
-* [ ] Test fbServer and make it work on windows.
 
 Detail:
 
